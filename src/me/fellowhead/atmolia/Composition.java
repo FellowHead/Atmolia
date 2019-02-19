@@ -22,8 +22,8 @@ public class Composition {
                     new ZoneSmp.Zone(new File(Main.class.getResource(root + "1.wav").toURI()),36,24,39),
                     new ZoneSmp.Zone(new File(Main.class.getResource(root + "2.wav").toURI()),42,40,45),
                     new ZoneSmp.Zone(new File(Main.class.getResource(root + "3.wav").toURI()),48,46,51),
-                    //new ZoneSmp.Zone(new File(Main.class.getResource(root + "4.wav").toURI()),54,52,57),
-                    //new ZoneSmp.Zone(new File(Main.class.getResource(root + "5.wav").toURI()),60,58,63),
+                    new ZoneSmp.Zone(new File(Main.class.getResource(root + "4.wav").toURI()),54,52,57),
+                    new ZoneSmp.Zone(new File(Main.class.getResource(root + "5.wav").toURI()),60,58,63),
                     new ZoneSmp.Zone(new File(Main.class.getResource(root + "6.wav").toURI()),66,64,69),
                     new ZoneSmp.Zone(new File(Main.class.getResource(root + "7.wav").toURI()),72,70,96)
             });
