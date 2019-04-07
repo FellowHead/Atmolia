@@ -1,7 +1,7 @@
 package me.fellowhead.atmolia.instruments;
 
 import me.fellowhead.atmolia.AdvancedTime;
-import me.fellowhead.atmolia.Note;
+import me.fellowhead.atmolia.theory.Note;
 
 public class LeadSynth extends Instrument {
     @Override
@@ -15,7 +15,7 @@ public class LeadSynth extends Instrument {
                 value += 0.5 * getValue(new Note(n.abs + d, n.start, n.length), time);
             }
 
-            return value * (1 - 0.2 * (time.beats - n.start.beats) / (double)n.length.beats);
+            return value * (1 - 0.2 * (time.beats - n.start.beats) / n.length.beats);
         }
         return 0;
     }

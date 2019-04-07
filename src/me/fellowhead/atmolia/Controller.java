@@ -7,6 +7,9 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import me.fellowhead.atmolia.theory.Chord;
+import me.fellowhead.atmolia.theory.Note;
+import me.fellowhead.atmolia.theory.Tone;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -56,13 +59,22 @@ public class Controller {
                 int y = 20;
                 double height = 5;
 
+                for (int i = 0; i < 100; i++) {
+                    g.setStroke((i % 4 == 0) ? Color.BLACK : Color.GRAY);
+                    double x = centerX + (i - position) * m;
+                    g.strokeLine(x,0, x, canvas.getHeight());
+                }
+
                 int i = 0;
                 for (Track t : builder.getTracks()) {
                     g.setFill(Color.BLUE.deriveColor((i++ * 50), 1, 1, 1));
-                    Note[] notes = t.notes.toArray(new Note[0]);
+                    Note[] notes = t.getFinalNotes();
                     for (Note n : notes) {
                         //System.out.println(n + " | " + (canvas.getHeight() - (n.abs - y) * height + height));
-                        g.fillRect(centerX + (n.start.beats - position) * m, canvas.getHeight() - (n.abs - y) * height + height, n.length.beats * m, height);
+                        double startX = centerX + (n.start.beats - position) * m;
+                        double startY = canvas.getHeight() - (n.abs - y) * height + height;
+                        g.fillRect(startX, startY,n.length.beats * m, height);
+                        g.fillText(new Tone(n.abs).getName(), startX, startY);
                         //g.strokeText("" + n.getHertz(),centerX + (n.start.beats - position) * m, canvas.getHeight() - (n.abs - y) * height + height);
                     }
                 }
@@ -85,8 +97,13 @@ public class Controller {
             AudioBuilder.setBytesPerSmp((byte) 4);
 
             String time = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-            boolean ubuntu = false;
-            String mainDir = System.getProperty("user.home") + (ubuntu ? "/Downloads/Atmo" : "/Documents/Atmo");
+            boolean chromebook = false; // Some of this code is activeley developed on an Ubuntu-ed Chromebook
+            String mainDir = System.getProperty("user.home") + (chromebook ? "/Downloads/Atmo" : "/Documents/Atmo");
+            if (!new File(mainDir).exists()) {
+                if (!new File(mainDir).mkdirs()) {
+                    System.out.println("Path " + mainDir + " could not be created!");
+                }
+            }
             File audioFile = new File(mainDir + "/Audio/atmo_" + time + ".wav");
             File textFile = new File(mainDir + "/Chords/atmo-chords_" + time + ".txt");
 
@@ -96,9 +113,7 @@ public class Controller {
 
             for (int i = 0; i < size; i += buffer) {
                 byte[] received = builder.getBytes(i, buffer);
-                for (int n = 0; n < buffer; n++) {
-                    data[i + n] = received[n];
-                }
+                if (buffer >= 0) System.arraycopy(received, 0, data, i, buffer);
                 System.out.println("Receiving bytes... " + (100 * i / size) + "%");
             }
 

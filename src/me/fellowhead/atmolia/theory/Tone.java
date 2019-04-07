@@ -1,6 +1,4 @@
-package me.fellowhead.atmolia;
-
-import java.util.ArrayList;
+package me.fellowhead.atmolia.theory;
 
 public class Tone {
     public static final byte C = 0;

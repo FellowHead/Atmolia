@@ -3,7 +3,7 @@ package me.fellowhead.atmolia.instruments.oscillators;
 import me.fellowhead.atmolia.AdvancedTime;
 import me.fellowhead.atmolia.BeatTime;
 import me.fellowhead.atmolia.instruments.Instrument;
-import me.fellowhead.atmolia.Note;
+import me.fellowhead.atmolia.theory.Note;
 
 public abstract class Oscillator extends Instrument {
     public BeatTime attack;

@@ -1,7 +1,9 @@
 package me.fellowhead.atmolia;
 
-import me.fellowhead.atmolia.instruments.Instrument;
 import me.fellowhead.atmolia.instruments.oscillators.SimpleOscillator;
+import me.fellowhead.atmolia.theory.Chord;
+import me.fellowhead.atmolia.theory.Note;
+import me.fellowhead.atmolia.theory.Tone;
 
 import javax.sound.sampled.AudioFormat;
 import java.util.*;
@@ -14,7 +16,7 @@ public class AudioBuilder {
 
     private static final long streamEnd = 5000000;
     private static final int fadeOut = (int)frequency * 10;
-    public static final double bpm = 120;
+    public static final double bpm = 80;
 
     private Queue<Double> input = new ArrayDeque<>();
     private Queue<Double> reverb = new ArrayDeque<>();
@@ -82,17 +84,15 @@ public class AudioBuilder {
     }
 
     private Chord getRandomChord(Random r) {
-        return new Chord(new Tone(12 + r.nextInt(12)), r.nextBoolean());
+        return Chord.build(new Tone(r.nextInt(12)), r.nextBoolean(), false);
     }
 
     public void createNotes() {
-        System.out.println("Creating notes at " + pos);
+        //System.out.println("Creating notes at " + pos);
         //Random r = new Random();
 
         Composition composition = new Composition();
         tracks = new ArrayList<>(Arrays.asList(composition.toTracks()));
-
-        System.out.println(tracks.get(0).notes.get(0));
 
         pos += 50;
 
@@ -101,17 +101,17 @@ public class AudioBuilder {
 //        Track chordT = tracks.get(1);
 //        for (int i = 0; i < chords.length; i++) {
 //            Chord c = chords[i];
-//            for (int n = 0; n < c.getTones().length; n++) {
-//                //System.out.println(c.getName() + ": " + n + " | " + Atmo.getToneName(c.getTones()[n]));
-//                chordT.notes.add(new Note(Atmo.abs(c.getTones()[n], 5), (pos + i * 4) * m + n * 1000, (int)(m * 4f)));
+//            for (int n = 0; n < c.getPlayed().length; n++) {
+//                //System.out.println(c.getName() + ": " + n + " | " + Atmo.getToneName(c.getPlayed()[n]));
+//                chordT.notes.add(new Note(Atmo.abs(c.getPlayed()[n], 5), (pos + i * 4) * m + n * 1000, (int)(m * 4f)));
 //            }
 //        }
 //
 //        Track bassT = tracks.get(2);
 //        for (int i = 0; i < chords.length; i++) {
 //            Chord c = chords[i];
-//            bassT.notes.add(new Note(Atmo.abs(c.getMain(), 2), (pos + i * 4) * m, (int)(m * 4f)));
-//            bassT.notes.add(new Note(Atmo.abs(c.getMain(), 3), (pos + i * 4) * m, (int)(m * 4f)));
+//            bassT.notes.add(new Note(Atmo.abs(c.getBase(), 2), (pos + i * 4) * m, (int)(m * 4f)));
+//            bassT.notes.add(new Note(Atmo.abs(c.getBase(), 3), (pos + i * 4) * m, (int)(m * 4f)));
 //        }
 //
 //        Track leadT = tracks.get(0);
@@ -133,6 +133,7 @@ public class AudioBuilder {
 
     public byte[] getBytes(long start, int len) {
         byte[] out = new byte[len];
+        //Arrays.fill(out, (byte) 0);
 
 //        while (new AdvancedTime((double)pos, bpm, sampleRate).absolute() < start + len) {
 //            createNotes();
@@ -152,21 +153,23 @@ public class AudioBuilder {
 
             for (Track t : tracks) {
                 if (t.volume > 0) {
-                    ArrayList<Note> removable = new ArrayList<>();
-                    for (Note n : t.notes) {
-                        long noteStart = n.start.advanced(bpm, frequency).absolute();
-                        long noteLength = n.length.advanced(bpm, frequency).absolute();
+                    //System.out.println(at.beats);
+                    double ev = t.evaluate(at);
+                    glued += ev * t.volume;
 
-                        if (noteStart <= start + 50000 && (noteStart + noteLength) <= start + 200000) {
-                            if (noteStart > frequency * bytesPerSmp * 20 && (noteStart + noteLength) < start - 500000) {
-                                removable.add(n);
-                            }
-
-                            double ev = t.instrument.evaluate(n, at);
-                            glued += ev * t.volume;
-                        }
-                    }
-                    t.notes.removeAll(removable);
+//                    ArrayList<Note> removable = new ArrayList<>();
+//                    for (Note n : t.notes) {
+//                        long noteStart = n.start.advanced(bpm, frequency).absolute();
+//                        long noteLength = n.length.advanced(bpm, frequency).absolute();
+//
+//                        if (noteStart <= start + 50000 && (noteStart + noteLength) <= start + 200000) {
+//                            if (noteStart > frequency * bytesPerSmp * 20 && (noteStart + noteLength) < start - 500000) {
+//                                removable.add(n);
+//                            }
+//
+//                        }
+//                    }
+//                    t.notes.removeAll(removable);
                 }
             }
 
@@ -179,6 +182,7 @@ public class AudioBuilder {
             //input.add(glued);
 
             int value = (int)(bitMult * m * glued);
+            //System.out.println(glued + " | " + value);
 
             for (int b = 0; b < bytesPerSmp; b++) {
                 out[i + b] += (byte)((value >> (b * 8)));

@@ -1,4 +1,6 @@
-package me.fellowhead.atmolia;
+package me.fellowhead.atmolia.theory;
+
+import me.fellowhead.atmolia.BeatTime;
 
 public class Note {
     public static final double semitone = Math.pow(2, 1f / 12);

@@ -41,7 +41,7 @@ public class Atmo {
 //            chords.add(current);
 //            int[] tones = new int[1];
 //            for (int t = 0; i < tones.length; i++) {
-//                tones[t] = current.getTones()[r.nextInt(current.getTones().length)];
+//                tones[t] = current.getPlayed()[r.nextInt(current.getPlayed().length)];
 //            }
 //            Chord[] matches = Chord.findMatches(tones);
 //            ArrayList<Chord> choices = new ArrayList<>();

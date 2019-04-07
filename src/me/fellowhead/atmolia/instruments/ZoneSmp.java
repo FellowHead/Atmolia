@@ -1,20 +1,48 @@
 package me.fellowhead.atmolia.instruments;
 
 import me.fellowhead.atmolia.AdvancedTime;
-import me.fellowhead.atmolia.Note;
-import me.fellowhead.atmolia.Tone;
+import me.fellowhead.atmolia.theory.Note;
+import me.fellowhead.atmolia.theory.Tone;
+import me.fellowhead.io.docs.PropHolder;
+import me.fellowhead.io.docs.Property;
+import me.fellowhead.io.docs.Savable;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Objects;
 
 public class ZoneSmp extends Instrument {
-    public static class Zone {
+    public static class Zone extends Savable {
+        @Override
+        protected PropHolder toProp() {
+            return new PropHolder(
+                    new Property("source", sourceFile.getAbsolutePath()),
+                    new Property("root", root),
+                    new Property("toneL", toneL),
+                    new Property("toneH", toneH),
+                    new Property("loopStart", loopStart),
+                    new Property("loopLength", loopLength),
+                    new Property("sustain", sustain),
+                    new Property("release", release)
+            );
+        }
+
+        @Override
+        protected void fromProp(PropHolder propHolder) {
+            root = propHolder.find("root").getIntValue();
+            toneL = propHolder.find("toneL").getIntValue();
+            toneH = propHolder.find("toneH").getIntValue();
+            loopStart = propHolder.find("loopStart").getIntValue();
+            loopLength = propHolder.find("loopLength").getIntValue();
+            sustain = propHolder.find("sustain").getIntValue();
+            release = propHolder.find("release").getIntValue();
+            init(new File(propHolder.find("source").getStringValue()));
+        }
+
         public interface ZoneListener {
             void ready(Zone zone);
         }
@@ -28,6 +56,7 @@ public class ZoneSmp extends Instrument {
         private float sustain = 3; //in seconds
         private float release = 0.5f; //in seconds
         private float sampleRate;
+        private File sourceFile;
 
         public int getSamplePos(int x) {
             if (loopLength <= 0) {
@@ -54,6 +83,7 @@ public class ZoneSmp extends Instrument {
             return root;
         }
 
+        //hardcoded
         public static void loadFromNamedFile(File wavFile, int rangeDown, int rangeUp, ZoneListener zoneListener) {
             int root;
             String s = wavFile.getName().replace('_', ' ').replace('-', ' ');
@@ -74,12 +104,8 @@ public class ZoneSmp extends Instrument {
             }
         }
 
-        public Zone(File wavFile, int root, int low, int high) {
-            this.root = root;
-            this.toneL = low;
-            this.toneH = high;
-            this.loopStart = 1000;
-            this.loopLength = 5000;
+        private void init(File wavFile) {
+            this.sourceFile = wavFile;
             float best = 0;
             try {
                 AudioInputStream stream = AudioSystem.getAudioInputStream(wavFile);
@@ -114,17 +140,26 @@ public class ZoneSmp extends Instrument {
                 e.printStackTrace();
                 System.out.println("File: " + wavFile.getPath() + " | " + wavFile.exists());
             }
+        }
 
-            /*for (int i = 0; i < 25000; i++) {
-                System.out.println(i + " | " + getSamplePos(i));
-            }*/
+        public Zone(File wavFile, int root, int low, int high) {
+            this.root = root;
+            this.toneL = low;
+            this.toneH = high;
+            this.loopStart = 1000;
+            this.loopLength = 5000;
+            init(wavFile);
         }
     }
 
     private ArrayList<Zone> zones;
     private float globalRelease;
 
-    public void setZones(Zone[] zones) {
+    public Zone[] getZones() {
+        return zones.toArray(new Zone[0]);
+    }
+
+    public void setZones(Zone... zones) {
         this.zones = new ArrayList<>();
         globalRelease = 0;
         for (Zone zone : zones) {
@@ -157,7 +192,7 @@ public class ZoneSmp extends Instrument {
     public void createZonesFromDirectory(File dir) {
         zones = new ArrayList<>();
         final int[] inProgress = {0};
-        for (File file : dir.listFiles((f, name) -> name.endsWith(".wav"))) {
+        for (File file : Objects.requireNonNull(dir.listFiles((f, name) -> name.endsWith(".wav")))) {
             inProgress[0]++;
             new Thread(() -> Zone.loadFromNamedFile(file, 0, 0, zone -> {
                 System.out.println("Adding zone " + zone.root);
